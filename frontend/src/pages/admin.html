@@ -1,0 +1,72 @@
+<div class="page-head">
+  <div>
+    <h2 class="page-title">Admin Console</h2>
+    <p class="page-subtitle">Platform administration, user access control, and audit.</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-outline" data-action="refresh-admin">Refresh</button>
+  </div>
+</div>
+
+<div id="admin-stats" class="grid grid-4 metric-cards"></div>
+
+<div class="admin-tabs">
+  <button class="admin-tab active" data-tab="users">Users &amp; RBAC</button>
+  <button class="admin-tab" data-tab="agents">Agent Config</button>
+  <button class="admin-tab" data-tab="audit">Audit Log</button>
+  <button class="admin-tab" data-tab="security">Security Events</button>
+  <button class="admin-tab" data-tab="settings">Settings</button>
+</div>
+
+<div id="admin-users" class="admin-tab-panel">
+  <div class="card">
+    <div class="table-toolbar">
+      <input type="search" id="admin-user-search" placeholder="Search users..." class="input" />
+    </div>
+    <div class="table-wrap">
+      <table class="table" id="admin-users-table">
+        <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="admin-agents" class="admin-tab-panel hidden">
+  <div class="card">
+    <div class="table-wrap">
+      <table class="table" id="admin-agents-table">
+        <thead><tr><th>Agent</th><th>Provider</th><th>Model</th><th>Enabled</th><th>Action</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="admin-audit" class="admin-tab-panel hidden">
+  <div class="card">
+    <div class="table-wrap">
+      <table class="table" id="admin-audit-table">
+        <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Resource</th><th>Result</th><th>Details</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="admin-security" class="admin-tab-panel hidden">
+  <div class="card">
+    <div class="table-wrap">
+      <table class="table" id="admin-security-table">
+        <thead><tr><th>Time</th><th>Type</th><th>Severity</th><th>Source</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="admin-settings" class="admin-tab-panel hidden">
+  <div class="card">
+    <div id="admin-settings-list"></div>
+  </div>
+</div>

@@ -1,0 +1,28 @@
+<div class="page-head">
+  <div>
+    <h2 class="page-title">Agent Fleet</h2>
+    <p class="page-subtitle">Monitor the specialized NEXUS agents running your analysis.</p>
+  </div>
+  <div class="page-actions">
+    <span class="demo-badge">demo</span>
+    <button class="btn btn-outline" data-action="refresh-agents">Refresh</button>
+  </div>
+</div>
+<div id="agents-grid" class="grid grid-4"></div>
+
+<div id="agent-detail" class="card agent-detail hidden">
+  <div class="agent-detail-head">
+    <h3 id="agent-detail-name">Agent</h3>
+    <span id="agent-detail-status" class="status-pill"></span>
+    <button class="icon-btn" id="agent-detail-close">&#10005;</button>
+  </div>
+  <p id="agent-detail-desc" class="muted"></p>
+  <div id="agent-detail-stats" class="grid grid-4 metric-cards"></div>
+  <h4 class="section-title">Execution History</h4>
+  <div class="table-wrap">
+    <table id="agent-runs-table" class="table">
+      <thead><tr><th>Time</th><th>Task</th><th>Status</th><th>Duration</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>

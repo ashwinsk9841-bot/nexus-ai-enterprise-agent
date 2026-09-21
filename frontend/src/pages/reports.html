@@ -1,0 +1,46 @@
+<div class="page-head">
+  <div>
+    <h2 class="page-title">Report Generator</h2>
+    <p class="page-subtitle">Generate executive, security, operations, and incident reports.</p>
+  </div>
+</div>
+
+<div class="card report-builder">
+  <div class="filter-row">
+    <div class="filter-item">
+      <label>Report type</label>
+      <select id="rep-type">
+        <option value="daily">Daily Executive Report</option>
+        <option value="weekly">Weekly Business Report</option>
+        <option value="security">Security Report</option>
+        <option value="operations">Operations Report</option>
+        <option value="incidents">AI Incident Report</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Date range</label>
+      <select id="rep-range">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" id="rep-generate">
+      <span class="btn-label">Generate Report</span>
+      <span class="btn-spinner hidden"></span>
+    </button>
+  </div>
+</div>
+
+<h3 class="section-title">Generated Reports</h3>
+<div id="reports-list" class="reports-list"></div>
+
+<div id="report-view" class="card report-view hidden">
+  <div class="report-view-head">
+    <h3 id="report-view-title">Report</h3>
+    <div>
+      <button class="btn btn-outline" id="report-print">&#8595; Export PDF</button>
+    </div>
+  </div>
+  <div id="report-view-body"></div>
+</div>

@@ -1,0 +1,71 @@
+<div class="page-head">
+  <div>
+    <h2 class="page-title">Business Analytics</h2>
+    <p class="page-subtitle">Filter, compare, and derive insight from business metrics.</p>
+  </div>
+</div>
+
+<div class="card filter-card">
+  <div class="filter-row">
+    <div class="filter-item">
+      <label>Date range</label>
+      <select id="an-date-range">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="180">Last 180 days</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Department</label>
+      <select id="an-department">
+        <option value="All">All</option>
+        <option>Sales</option><option>Marketing</option><option>Ops</option>
+        <option>Finance</option><option>Support</option><option>IT</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Region</label>
+      <select id="an-region">
+        <option value="All">All</option>
+        <option>North America</option><option>Europe</option><option>APAC</option>
+        <option>LATAM</option><option>MEA</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Product</label>
+      <select id="an-product">
+        <option value="All">All</option>
+        <option>Nexus Core</option><option>Nexus Analytics</option><option>Nexus Security</option>
+        <option>Nexus Ops</option><option>Nexus AI+</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Segment</label>
+      <select id="an-segment">
+        <option value="All">All</option>
+        <option>Enterprise</option><option>Mid-Market</option><option>SMB</option><option>Strategic</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" id="an-apply">Apply Filters</button>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card chart-card"><canvas id="chart-an-revenue"></canvas></div>
+  <div class="card chart-card"><canvas id="chart-an-sales"></canvas></div>
+  <div class="card chart-card"><canvas id="chart-an-customers"></canvas></div>
+  <div class="card chart-card"><canvas id="chart-an-conversion"></canvas></div>
+  <div class="card chart-card"><canvas id="chart-an-churn"></canvas></div>
+  <div class="card chart-card"><canvas id="chart-an-expenses"></canvas></div>
+</div>
+
+<div class="card action-bar">
+  <button class="btn btn-outline" id="an-compare"><span class="compare-ico">&#8644;</span> Compare periods</button>
+  <button class="btn btn-outline" id="an-export">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Export CSV
+  </button>
+  <button class="btn btn-primary" id="an-explain">&#10024; Explain this chart with AI</button>
+</div>
+<div id="an-explanation" class="card ai-explanation hidden"></div>

@@ -1,0 +1,47 @@
+<div class="page-head">
+  <div>
+    <h2 class="page-title">Knowledge Center</h2>
+    <p class="page-subtitle">Upload documentation and runbooks — NEXUS uses RAG to answer with sources.</p>
+  </div>
+</div>
+
+<div class="card drop-zone" id="drop-zone">
+  <div class="drop-inner">
+    <div class="upload-ico">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <h3>Drop documents here</h3>
+    <p>PDF, TXT, Markdown — company policies, runbooks, documentation</p>
+    <button class="btn btn-outline" id="file-picker-btn">Choose Files</button>
+    <input type="file" id="knowledge-file-input" accept=".pdf,.txt,.md,.markdown" multiple hidden />
+  </div>
+</div>
+
+<div id="upload-progress" class="hidden"></div>
+
+<div class="grid grid-2">
+  <div>
+    <h3 class="section-title">Documents</h3>
+    <div id="knowledge-docs" class="doc-list">
+      <div class="empty-state small">No documents uploaded yet.</div>
+    </div>
+  </div>
+  <div>
+    <h3 class="section-title">Ask Your Knowledge Base</h3>
+    <div class="card">
+      <div class="kb-q-wrap">
+        <textarea id="kb-question" class="command-input" rows="2" placeholder="e.g. How should we respond to a database incident?"></textarea>
+        <button class="btn btn-primary" id="kb-ask">
+          <span class="btn-label">Ask NEXUS</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+      </div>
+      <div id="kb-answer" class="kb-answer hidden">
+        <h4 class="kb-answer-title">NEXUS Knowledge Answer</h4>
+        <div id="kb-answer-text"></div>
+        <h5 class="kb-sources-title">Sources</h5>
+        <div id="kb-sources"></div>
+      </div>
+    </div>
+  </div>
+</div>
