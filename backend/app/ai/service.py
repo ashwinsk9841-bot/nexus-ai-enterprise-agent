@@ -2,6 +2,7 @@
 
 import json
 import logging
+import threading
 import time
 from datetime import datetime, timezone
 
@@ -9,24 +10,47 @@ from ..core.config import settings
 
 logger = logging.getLogger("nexus.ai")
 
-try:
-    from openai import OpenAI
-
-    _client = OpenAI(api_key=settings.OPENAI_API_KEY) if settings.OPENAI_API_KEY else None
-    _client_available = _client is not None
-except Exception:
-    _client = None
-    _client_available = False
+# The OpenAI SDK is expensive to import (hundreds of pydantic types). It is
+# loaded lazily, only when an AI feature is actually used, so the login page
+# never pays for AI initialization.
+_CLIENT = None
+_CLIENT_AVAILABLE = False
+_CLIENT_LOCK = threading.Lock()
 
 EMBEDDING_DIMENSIONS = 1536
 
 
+def _ensure_client():
+    """Import and build the OpenAI client once, on first AI use (post-auth)."""
+    global _CLIENT, _CLIENT_AVAILABLE
+    if _CLIENT is not None or _CLIENT_AVAILABLE:
+        return _CLIENT
+    with _CLIENT_LOCK:
+        if _CLIENT is None and not _CLIENT_AVAILABLE:
+            try:
+                from openai import OpenAI
+
+                _CLIENT = (
+                    OpenAI(api_key=settings.OPENAI_API_KEY)
+                    if settings.OPENAI_API_KEY
+                    else None
+                )
+                _CLIENT_AVAILABLE = _CLIENT is not None
+            except Exception:
+                _CLIENT = None
+                _CLIENT_AVAILABLE = False
+    return _CLIENT
+
+
 def openai_available() -> bool:
-    return _client_available
+    if not settings.OPENAI_API_KEY:
+        return False
+    _ensure_client()
+    return _CLIENT_AVAILABLE
 
 
 def get_openai_client():
-    return _client
+    return _ensure_client()
 
 
 def generate_embedding(text: str) -> list[float]:
@@ -36,9 +60,9 @@ def generate_embedding(text: str) -> list[float]:
     unavailable so the RAG pipeline still functions in demo mode.
     """
     cleaned = text.strip()
-    if _client_available:
+    if openai_available():
         try:
-            resp = _client.embeddings.create(
+            resp = get_openai_client().embeddings.create(
                 model=settings.OPENAI_EMBEDDING_MODEL, input=[cleaned[:8000]]
             )
             return resp.data[0].embedding
@@ -87,14 +111,14 @@ def ai_chat(
     When OpenAI is not configured, this raises an informative error that
     callers can choose to handle by returning a demo/local response instead.
     """
-    if not _client_available:
+    if not openai_available():
         raise RuntimeError("OPENAI_API_KEY is not configured")
 
     kwargs = {}
     if response_json:
         kwargs["response_format"] = {"type": "json_object"}
 
-    resp = _client.chat.completions.create(
+    resp = get_openai_client().chat.completions.create(
         model=settings.OPENAI_MODEL,
         messages=messages,
         temperature=temperature,
