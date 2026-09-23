@@ -1,0 +1,5 @@
+# Root requirements for Streamlit Cloud / `streamlit run app.py`.
+# Streamlit Cloud installs dependencies from requirements.txt next to the main
+# script, so this file must exist at the repo root. Keep it a thin include of
+# the backend manifest — do not duplicate/pin versions here.
+-r backend/requirements.txt
