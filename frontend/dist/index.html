@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="/" />
+  <title>NEXUS — Enterprise AI Intelligence &amp; Operations</title>
+  <meta name="description" content="NEXUS enterprise AI command center" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-C7x9kOco.css">
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="bg-gradient-overlay"></div>
+
+  <!-- ============ LOGIN SCREEN ============ -->
+  <section id="auth-login" class="login-screen auth-screen active-screen">
+    <div class="login-card">
+      <div class="login-logo-wrap">
+        <div class="nexus-logo-mark"><span class="logo-core"></span></div>
+        <h1 class="nexus-wordmark">NEXUS</h1>
+      </div>
+      <p class="login-subtitle">Enterprise AI Intelligence &amp; Operations</p>
+      <p class="auth-note hidden" data-auth-note></p>
+      <form id="login-form" class="login-form" novalidate>
+        <div class="field-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="you@company.com" autocomplete="email" required />
+        </div>
+        <div class="field-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required />
+        </div>
+        <div class="field-group row-between">
+          <label class="checkbox-label">
+            <input type="checkbox" id="remember-me" />
+            <span class="checkbox-custom"></span>
+            <span>Remember me</span>
+          </label>
+        </div>
+        <div class="form-error auth-error hidden"></div>
+        <button type="submit" id="login-btn" class="btn btn-primary btn-block">
+          <span class="btn-label">Sign In</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+      </form>
+      <div class="demo-divider"><span>or</span></div>
+      <button id="demo-login-btn" class="btn btn-ghost btn-block">
+        <span class="demo-orb"></span>Use Demo Account
+      </button>
+      <p class="login-footnote">New here? <a href="#signup" id="signup-link" data-to-signup>Create an account</a></p>
+    </div>
+  </section>
+
+  <!-- ============ SIGNUP SCREEN ============ -->
+  <section id="auth-signup" class="login-screen auth-screen">
+    <div class="login-card">
+      <div class="login-logo-wrap">
+        <div class="nexus-logo-mark"><span class="logo-core"></span></div>
+        <h1 class="nexus-wordmark">NEXUS</h1>
+      </div>
+      <h2 class="auth-heading" style="font-size:18px;font-weight:600;text-align:center;margin-bottom:6px;color:#e7edf7;">Create an account</h2>
+      <p class="login-subtitle">Enterprise AI Intelligence &amp; Operations</p>
+      <p class="auth-note hidden" data-auth-note></p>
+      <form id="signup-form" class="login-form" novalidate>
+        <div class="field-group">
+          <label for="signup-fullname">Full name</label>
+          <input type="text" id="signup-fullname" placeholder="Jane Doe" autocomplete="name" required />
+        </div>
+        <div class="field-group">
+          <label for="signup-email">Work email</label>
+          <input type="email" id="signup-email" placeholder="you@company.com" autocomplete="email" required />
+        </div>
+        <div class="field-group">
+          <label for="signup-username">Username</label>
+          <input type="text" id="signup-username" placeholder="jane.doe" autocomplete="username" required />
+        </div>
+        <div class="field-group">
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" placeholder="8+ chars with upper, lower &amp; number" autocomplete="new-password" required />
+        </div>
+        <div class="field-group">
+          <label for="signup-confirm-password">Confirm password</label>
+          <input type="password" id="signup-confirm-password" placeholder="Repeat your password" autocomplete="new-password" required />
+        </div>
+        <div class="form-error auth-error hidden"></div>
+        <button type="submit" id="signup-btn" class="btn btn-primary btn-block">
+          <span class="btn-label">Create Account</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+      </form>
+      <div class="demo-divider"><span>or</span></div>
+      <button type="button" class="btn btn-ghost btn-block" data-back-login>Already have an account? Sign in</button>
+    </div>
+  </section>
+
+  <!-- ============ MAIN APP ============ -->
+  <div id="app-shell" class="app-shell">
+    <header class="topnav">
+      <div class="topnav-left">
+        <button id="sidebar-toggle" class="icon-btn" title="Toggle navigation">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <a href="#overview" class="topnav-logo" data-nav>
+          <span class="nexus-logo-mark small"><span class="logo-core"></span></span>
+          <span class="topnav-wordmark">NEXUS</span>
+        </a>
+      </div>
+      <nav class="topnav-center" id="topnav-center">
+        <a href="#overview" data-nav data-page="overview">Overview</a>
+        <a href="#command" data-nav data-page="command">AI Command</a>
+        <a href="#analytics" data-nav data-page="analytics">Analytics</a>
+        <a href="#agents" data-nav data-page="agents">Agents</a>
+        <a href="#security" data-nav data-page="security">Security</a>
+        <a href="#operations" data-nav data-page="operations">Operations</a>
+        <a href="#knowledge" data-nav data-page="knowledge">Knowledge</a>
+        <a href="#incidents" data-nav data-page="incidents">Incidents</a>
+        <a href="#reports" data-nav data-page="reports">Reports</a>
+        <a href="#admin" data-nav data-page="admin" data-admin-only>Admin</a>
+      </nav>
+      <div class="topnav-right">
+        <button id="notif-btn" class="icon-btn notif-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notif-badge" class="notif-badge hidden">0</span>
+        </button>
+        <div class="status-pill" id="system-status-pill" title="System status">
+          <span class="status-dot"></span><span id="system-status-text">Operational</span>
+        </div>
+        <button id="profile-btn" class="profile-btn">
+          <span class="profile-avatar" id="profile-avatar">A</span>
+          <span class="profile-info">
+            <span class="profile-name" id="profile-name">User</span>
+            <span class="profile-role" id="profile-role">VIEWER</span>
+          </span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button id="settings-btn" class="icon-btn" title="Settings">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <aside class="sidebar" id="sidebar">
+      <nav class="sidebar-nav">
+        <a href="#overview" data-nav data-page="overview" class="active"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>Overview</span></a>
+        <a href="#command" data-nav data-page="command"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>AI Command</span></a>
+        <a href="#analytics" data-nav data-page="analytics"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Analytics</span></a>
+        <a href="#agents" data-nav data-page="agents"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="5"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Agents</span></a>
+        <a href="#security" data-nav data-page="security"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Security</span></a>
+        <a href="#operations" data-nav data-page="operations"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>Operations</span></a>
+        <a href="#knowledge" data-nav data-page="knowledge"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>Knowledge</span></a>
+        <a href="#incidents" data-nav data-page="incidents"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><span>Incidents</span></a>
+        <a href="#reports" data-nav data-page="reports"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg><span>Reports</span></a>
+        <a href="#admin" data-nav data-page="admin" data-admin-only><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg><span>Admin</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-hint"><span class="status-dot"></span>NEXUS Core v1.0</div>
+        <button id="logout-btn" class="btn btn-ghost btn-block logout-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content" id="main-content">
+      <section class="page active" data-page-id="overview" id="page-overview"></section>
+      <section class="page" data-page-id="command" id="page-command"></section>
+      <section class="page" data-page-id="analytics" id="page-analytics"></section>
+      <section class="page" data-page-id="agents" id="page-agents"></section>
+      <section class="page" data-page-id="security" id="page-security"></section>
+      <section class="page" data-page-id="operations" id="page-operations"></section>
+      <section class="page" data-page-id="knowledge" id="page-knowledge"></section>
+      <section class="page" data-page-id="incidents" id="page-incidents"></section>
+      <section class="page" data-page-id="reports" id="page-reports"></section>
+      <section class="page" data-page-id="admin" id="page-admin"></section>
+    </main>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Notification panel -->
+  <div id="notif-panel" class="notif-panel hidden"></div>
+
+  <!-- Profile dropdown -->
+  <div id="profile-menu" class="profile-menu hidden"></div>
+
+  <!-- Settings modal -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Settings</h3>
+        <button class="icon-btn" data-close-modal>&#10005;</button>
+      </div>
+      <div class="settings-body">
+        <div class="field-group row-between">
+          <label for="settings-email">Account email</label>
+          <input id="settings-email" readonly />
+        </div>
+        <div class="field-group row-between">
+          <label>Role</label>
+          <span class="status-pill" id="settings-role">VIEWER</span>
+        </div>
+        <div class="field-group row-between">
+          <label>Interface density</label>
+          <select id="settings-density"><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select>
+        </div>
+        <div class="field-group row-between">
+          <label>Auto-refresh dashboards (60s)</label>
+          <input type="checkbox" id="settings-autorefresh" checked />
+        </div>
+      </div>
+      <div class="modal-actions"><button class="btn btn-primary" data-close-modal>Done</button></div>
+    </div>
+  </div>
+
+  <script src="./src/js/api.js"></script>
+  <script src="./src/js/ui.js"></script>
+  <script src="./src/js/background.js"></script>
+  <script src="./src/js/app.js"></script>
+  <script src="./src/js/pages-core.js"></script>
+  <script src="./src/js/pages-ops.js"></script>
+  <script src="./src/js/pages-mgmt.js"></script>
+  <script src="./src/js/pages-admin.js"></script>
+</body>
+</html>

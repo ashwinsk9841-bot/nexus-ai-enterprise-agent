@@ -1,0 +1,30 @@
+<div class="page-head">
+  <div>
+    <h2 class="page-title">Operations Center</h2>
+    <p class="page-subtitle">Infrastructure health, resource utilization, and API performance.</p>
+  </div>
+  <div class="page-actions">
+    <span class="demo-badge">demo metrics</span>
+    <select id="ops-service" class="select-sm">
+      <option value="api">api</option>
+      <option value="frontend">frontend</option>
+      <option value="database">database</option>
+      <option value="ai-service">ai-service</option>
+      <option value="auth">auth</option>
+    </select>
+    <select id="ops-range" class="select-sm">
+      <option value="60">Last hour</option>
+      <option value="180">Last 3 hours</option>
+      <option value="360">Last 6 hours</option>
+    </select>
+    <button class="btn btn-outline" data-action="refresh-ops">Refresh</button>
+  </div>
+</div>
+
+<div id="ops-cards-live" class="grid grid-4 metric-cards"></div>
+<div class="grid grid-2">
+  <div class="card chart-card"><canvas id="chart-ops-cpu"></canvas></div>
+  <div class="card chart-card"><canvas id="chart-ops-latency"></canvas></div>
+  <div class="card chart-card"><canvas id="chart-ops-requests"></canvas></div>
+  <div class="card chart-card"><canvas id="chart-ops-errors"></canvas></div>
+</div>

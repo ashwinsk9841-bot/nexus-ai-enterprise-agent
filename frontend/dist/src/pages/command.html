@@ -1,0 +1,36 @@
+<div class="page-head">
+  <div>
+    <h2 class="page-title">AI Command Center</h2>
+    <p class="page-subtitle">Ask NEXUS anything about your business, systems, and operations.</p>
+  </div>
+</div>
+
+<div class="command-card card">
+  <div class="command-prompt-wrap">
+    <textarea id="command-input" class="command-input" rows="2"
+      placeholder="Ask NEXUS anything about your business or systems..."></textarea>
+    <div class="command-toolbar">
+      <div class="command-examples">
+        <button class="chip" data-query="Why is revenue down this month?">Why is revenue down?</button>
+        <button class="chip" data-query="Show critical incidents today.">Critical incidents today</button>
+        <button class="chip" data-query="Analyze customer churn.">Analyze churn</button>
+        <button class="chip" data-query="Why is API latency increasing?">API latency</button>
+        <button class="chip" data-query="Generate today's executive report.">Executive report</button>
+        <button class="chip" data-query="Compare this month with last month.">Month comparison</button>
+      </div>
+      <button id="command-submit" class="btn btn-primary command-submit">
+        <span class="btn-label">Run Analysis</span>
+        <span class="btn-spinner hidden"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="command-progress" class="command-progress hidden"></div>
+<div id="command-result" class="command-result hidden"></div>
+
+<div id="command-empty" class="command-empty">
+  <div class="empty-orb"></div>
+  <h3>Command Center Ready</h3>
+  <p>Ask a question about your enterprise. NEXUS will dispatch specialized agents, gather evidence, and produce a structured analysis with root causes and recommended actions.</p>
+</div>

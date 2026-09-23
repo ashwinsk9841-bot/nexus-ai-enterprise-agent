@@ -2,13 +2,15 @@
 NEXUS — single-command entry point.
 
     python app.py              (classic: FastAPI serves SPA, opens browser)
-    streamlit run app.py       (Streamlit host: backend auto-starts in-thread,
-                                NEXUS UI embedded full-screen)
+    streamlit run app.py       (Streamlit >= 1.63 auto-detects the module-level
+                                ASGI app below and serves it with Streamlit's
+                                OWN uvicorn on the Streamlit port).
 
-Both forms start the FastAPI backend, serve the built frontend from the same
-process, build the frontend automatically if needed, and auto-initialize the
-database. No second terminal is required. No `uvicorn ...` or `npm run dev`
-needed.
+Both forms serve the built frontend and the /api routes from the SAME process
+on a SINGLE origin: no second uvicorn, no embedded iframe, no 127.0.0.1
+redirect. The frontend is built automatically if needed and the database is
+auto-initialized on startup. No second terminal, no `uvicorn ...`, no
+`npm run dev` required.
 """
 from __future__ import annotations
 
@@ -18,7 +20,10 @@ import subprocess
 import sys
 import threading
 import webbrowser
+from contextlib import asynccontextmanager
 from pathlib import Path
+
+from fastapi import FastAPI
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 BACKEND_DIR = PROJECT_ROOT / "backend"
@@ -116,8 +121,14 @@ def mount_frontend(fastapi_app, static_dir: Path) -> None:
     return
 
 
-def _in_streamlit() -> bool:
-    """True when this file is executed via `streamlit run app.py`."""
+def _running_under_streamlit_script() -> bool:
+    """True when this file is being executed as a classic Streamlit script.
+
+    Streamlit >= 1.63 never reaches this point: it detects the module-level
+    ASGI app below and serves it directly. This guard only matters for ancient
+    Streamlit builds, where executing app.py as a script would otherwise start
+    a SECOND web server — which we refuse to do.
+    """
     try:
         from streamlit.runtime.scriptrunner import get_script_run_ctx
         from streamlit.runtime import exists as st_runtime_exists
@@ -126,106 +137,67 @@ def _in_streamlit() -> bool:
         return False
 
 
-def _find_free_port(preferred: int) -> int:
-    """Return `preferred` if bindable, else an arbitrary free local port."""
-    import socket
+# ---------------------------------------------------------------------------
+# Module-level ASGI app.
+#
+# `streamlit run app.py` (Streamlit >= 1.63) AST-parses this file, finds the
+# `app = FastAPI(...)` assignment below, and serves that single app with
+# Streamlit's OWN uvicorn on the Streamlit port (8501 by default). The browser
+# reaches the NEXUS SPA and its /api routes on ONE origin — no second process,
+# no iframe, no container-localhost port that a deployed browser could never
+# reach.
+# ---------------------------------------------------------------------------
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-            s.bind(("127.0.0.1", preferred))
-            return preferred
-        except OSError:
-            s.bind(("127.0.0.1", 0))
-            return s.getsockname()[1]
+def _prepare_environment() -> None:
+    load_env_file(BACKEND_DIR / ".env")
 
-
-_NEXUS_SERVER = None
-_NEXUS_SERVER_LOCK = threading.Lock()
-
-
-def get_or_start_backend(fastapi_app, host: str, port: int) -> int:
-    """Start the FastAPI backend once per process; return the bound port.
-
-    Streamlit re-runs the script on every interaction, so a module-level
-    singleton (guarded by a lock) prevents multiple server instances.
-    Returns the port actually in use.
-    """
-    global _NEXUS_SERVER
-    with _NEXUS_SERVER_LOCK:
-        if _NEXUS_SERVER is not None:
-            return _NEXUS_SERVER["port"]
-        port = _find_free_port(port)
-        import uvicorn
-
-        config = uvicorn.Config(fastapi_app, host=host, port=port, log_level="info")
-        server = uvicorn.Server(config)
-        thread = threading.Thread(target=server.run, daemon=True)
-        thread.start()
-        _NEXUS_SERVER = {"server": server, "thread": thread, "port": port}
-        return port
-
-
-def _wait_for_backend(url: str, timeout: float = 45.0) -> bool:
-    """Block until the backend /api/health is answering (or timeout elapses)."""
-    import time
-    import urllib.request
-
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        try:
-            with urllib.request.urlopen(url + "/api/health", timeout=2) as resp:
-                if resp.status == 200:
-                    return True
-        except Exception:
-            pass
-        time.sleep(0.5)
-    return False
-
-
-def _run_streamlit(url: str) -> None:
-    """Streamlit host: embed the NEXUS SPA full-screen in a dark page.
-
-    The SPA is loaded in a plain (non-sandboxed) iframe pointing at the
-    backend origin (http://127.0.0.1:<port>), so auth tokens stored in that
-    origin's localStorage work exactly as they do in a normal browser tab.
-    """
-    import streamlit as st
-
-    st.set_page_config(page_title="NEXUS", layout="wide", initial_sidebar_state="collapsed")
-
-    st.markdown(
-        """
-        <style>
-          [data-testid="stHeader"], [data-testid="stToolbar"],
-          [data-testid="stDecoration"], [data-testid="stStatusWidget"],
-          [data-testid="stSidebar"], header, footer, #MainMenu,
-          [data-testid="stBottom"] { display: none !important; }
-          [data-testid="stAppViewContainer"],
-          [data-testid="stMain"], [data-testid="stBlockContainer"],
-          [data-testid="stApp"] { background: #05060a !important; }
-          [data-testid="stMain"], [data-testid="stBlockContainer"] {
-            padding: 0 !important;
-            max-width: 100% !important;
-            width: 100% !important;
-          }
-        </style>
-        """,
-        unsafe_allow_html=True,
+    # Zero-config default: local SQLite demo database unless explicitly configured.
+    os.environ.setdefault(
+        "DATABASE_URL", "sqlite:///" + (BACKEND_DIR / "nexus.db").as_posix()
     )
+    os.environ.setdefault("DEMO_MODE", "true")
 
-    if not _wait_for_backend(url):
-        st.error(
-            "NEXUS backend failed to start. Check the terminal for the uvicorn log, "
-            "then re-run:  streamlit run app.py"
+
+def _load_backend_module():
+    """Import backend/app/main.py as `backend.app.main` (no `app` name clash)."""
+    sys.path.insert(0, str(PROJECT_ROOT))
+    import backend.app.main as backend_module
+    return backend_module
+
+
+_prepare_environment()
+ensure_python_deps()
+# Best-effort auto-build so a freshly-cloned repo (no `dist/`) still serves a
+# production bundle. In classic mode main() re-runs this when `--rebuild` is set.
+ensure_frontend_build(force=False)
+
+_backend = _load_backend_module()
+
+
+@asynccontextmanager
+async def _nexus_lifespan(_app: FastAPI):
+    try:
+        _backend.init_db()
+    except Exception:
+        import logging
+        logging.getLogger("nexus").exception(
+            "Database initialization failed — check DATABASE_URL"
         )
-        st.stop()
+    yield
 
-    st.markdown(
-        f'<iframe src="{url}" title="NEXUS" style="position:fixed;inset:0;'
-        f'width:100vw;height:100vh;border:0;background:#05060a;"></iframe>',
-        unsafe_allow_html=True,
-    )
 
+app = FastAPI(
+    title="NEXUS",
+    version=getattr(_backend.app, "version", "1.0.0"),
+    description="Enterprise AI Intelligence & Operations Platform",
+    lifespan=_nexus_lifespan,
+)
+app.mount("/", _backend.app)
+
+
+# ---------------------------------------------------------------------------
+# Classic entry: `python app.py`
+# ---------------------------------------------------------------------------
 
 def run_server(fastapi_app, host: str, port: int, url: str, open_browser: bool) -> None:
     import uvicorn
@@ -272,36 +244,18 @@ class _BrowserOpenServer:
 
 
 def main() -> None:
-    load_env_file(BACKEND_DIR / ".env")
-
-    # Zero-config default: local SQLite demo database unless explicitly configured.
-    os.environ.setdefault(
-        "DATABASE_URL", "sqlite:///" + (BACKEND_DIR / "nexus.db").as_posix()
-    )
-    os.environ.setdefault("DEMO_MODE", "true")
-
-    ensure_python_deps()
+    if _running_under_streamlit_script():
+        sys.exit(
+            "[NEXUS] This build of Streamlit predates ASGI detection and would start "
+            "a second web server. Please upgrade Streamlit:\n"
+            "    pip install -U \"streamlit>=1.63\""
+        )
 
     force = "--rebuild" in sys.argv
-    static_dir = ensure_frontend_build(force=force)
+    ensure_frontend_build(force=force)
 
     host = os.environ.get("NEXUS_HOST", "127.0.0.1")
     port = int(os.environ.get("PORT") or os.environ.get("NEXUS_PORT") or "8000")
-
-    # Import must happen after env vars are set so config picks them up.
-    sys.path.insert(0, str(BACKEND_DIR))
-    from app.main import app as fastapi_app
-
-    mount_frontend(fastapi_app, static_dir)
-
-    if _in_streamlit():
-        port = get_or_start_backend(fastapi_app, host, port)
-        url = f"http://{host}:{port}"
-        log(f"NEXUS backend running at {url} (embedded in Streamlit)")
-        log("Use the in-page NEXUS UI to log in; close this Streamlit window to stop.")
-        log(DEMO_HINT)
-        _run_streamlit(url)
-        return
 
     url = f"http://{host}:{port}"
     no_browser = os.environ.get("NEXUS_NO_BROWSER", "0").lower() in ("1", "true", "yes")
@@ -309,7 +263,7 @@ def main() -> None:
     log(f"Starting NEXUS at {url}")
     log("Frontend and backend are served by this single process. Press Ctrl+C to stop.")
     log(DEMO_HINT)
-    run_server(fastapi_app, host, port, url, open_browser=not no_browser)
+    run_server(app, host, port, url, open_browser=not no_browser)
 
 
 if __name__ == "__main__":

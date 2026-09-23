@@ -1,0 +1,64 @@
+<div class="page-head">
+  <div>
+    <h2 class="page-title">Incident Management</h2>
+    <p class="page-subtitle">Track incidents from detection through resolution.</p>
+  </div>
+  <button class="btn btn-primary" id="inc-new-btn">+ New Incident</button>
+</div>
+
+<div class="incident-filters">
+  <select id="inc-status-filter" class="select-sm">
+    <option value="All">All statuses</option>
+    <option>Detected</option><option>Investigating</option><option>Awaiting Approval</option>
+    <option>Resolved</option><option>Closed</option>
+  </select>
+  <select id="inc-severity-filter" class="select-sm">
+    <option value="All">All severities</option>
+    <option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option>
+  </select>
+</div>
+
+<div id="incidents-list" class="incident-list"></div>
+
+<div id="incident-modal" class="modal hidden">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="inc-modal-title">New Incident</h3>
+      <button class="icon-btn" data-close-modal>&#10005;</button>
+    </div>
+    <form id="incident-form">
+      <input type="hidden" id="inc-id" />
+      <div class="field-group"><label>Title</label><input id="inc-title" required placeholder="Incident title" /></div>
+      <div class="field-group"><label>Description</label><textarea id="inc-desc" rows="3" placeholder="Description"></textarea></div>
+      <div class="grid grid-2">
+        <div class="field-group"><label>Severity</label><select id="inc-severity"><option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option></select></div>
+        <div class="field-group"><label>Status</label><select id="inc-status"><option>Detected</option><option>Investigating</option><option>Awaiting Approval</option><option>Resolved</option><option>Closed</option></select></div>
+        <div class="field-group"><label>Assigned Agent</label><select id="inc-agent"><option>data</option><option>analytics</option><option>finance</option><option>security</option><option>devops</option><option>support</option><option>report</option></select></div>
+        <div class="field-group"><label>Assignee</label><input id="inc-assignee" placeholder="Team or person" /></div>
+      </div>
+      <div class="field-group"><label>Root cause</label><input id="inc-rootcause" placeholder="(optional)" /></div>
+      <div class="field-group"><label>Resolution</label><textarea id="inc-resolution" rows="2" placeholder="(optional)"></textarea></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Incident</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="incident-detail" class="card incident-detail hidden">
+  <div class="agent-detail-head">
+    <h3 id="inc-detail-title">Incident</h3>
+    <span id="inc-detail-sev" class="severity-pill">LOW</span>
+    <button class="icon-btn" id="inc-detail-close">&#10005;</button>
+  </div>
+  <p class="muted" id="inc-detail-desc"></p>
+  <div class="grid grid-4 metric-cards" id="inc-detail-meta"></div>
+  <h4 class="section-title">Timeline</h4>
+  <div id="inc-timeline" class="timeline"></div>
+  <div class="detail-actions">
+    <button class="btn btn-outline" id="inc-add-note-btn">Add note</button>
+    <button class="btn btn-primary" id="inc-update-status-btn">Update status</button>
+  </div>
+</div>

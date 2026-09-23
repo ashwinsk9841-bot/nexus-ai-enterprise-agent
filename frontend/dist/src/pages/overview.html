@@ -1,0 +1,33 @@
+<div class="page-head">
+  <div>
+    <h2 class="page-title">Command Overview</h2>
+    <p class="page-subtitle">Real-time pulse of your enterprise systems and business.</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-outline" data-action="refresh-dashboard">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Refresh
+    </button>
+  </div>
+</div>
+
+<div id="health-cards" class="grid grid-4 metric-cards">
+  <div class="card metric-card skeleton-card"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+  <div class="card metric-card skeleton-card"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+  <div class="card metric-card skeleton-card"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+  <div class="card metric-card skeleton-card"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+</div>
+
+<h3 class="section-title">Business Intelligence</h3>
+<div id="biz-cards" class="grid grid-4 metric-cards"></div>
+
+<h3 class="section-title">Operational Status</h3>
+<div id="ops-cards" class="grid grid-4 metric-cards"></div>
+
+<h3 class="section-title">Trends</h3>
+<div class="grid grid-2">
+  <div class="card chart-card"><canvas id="chart-revenue"></canvas></div>
+  <div class="card chart-card"><canvas id="chart-customers"></canvas></div>
+  <div class="card chart-card"><canvas id="chart-latency"></canvas></div>
+  <div class="card chart-card"><canvas id="chart-incidents"></canvas></div>
+</div>

@@ -13,7 +13,6 @@ venv/
 
 # Frontend / Node
 node_modules/
-dist/
 .vite/
 
 # Editor / OS

@@ -1,0 +1,36 @@
+<div class="page-head">
+  <div>
+    <h2 class="page-title">Security Center</h2>
+    <p class="page-subtitle">Monitoring synthetic and demo security telemetry.</p>
+  </div>
+  <div class="page-actions">
+    <span class="demo-badge">demo telemetry</span>
+    <button class="btn btn-outline" data-action="refresh-security">Refresh</button>
+  </div>
+</div>
+
+<div id="security-cards" class="grid grid-5 metric-cards"></div>
+
+<div class="card chart-card chart-card-sm"><canvas id="chart-security"></canvas></div>
+
+<div class="card table-card">
+  <div class="table-card-head">
+    <h3 class="section-title">Security Events</h3>
+    <div class="filter-row compact">
+      <select id="sec-severity-filter">
+        <option value="All">All severities</option>
+        <option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option>
+      </select>
+      <select id="sec-status-filter">
+        <option value="All">All statuses</option>
+        <option>OPEN</option><option>INVESTIGATING</option><option>RESOLVED</option><option>CLOSED</option>
+      </select>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="table" id="security-table">
+      <thead><tr><th>Timestamp</th><th>Event</th><th>Source</th><th>Severity</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
