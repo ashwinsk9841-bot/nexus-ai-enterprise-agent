@@ -1,16 +1,19 @@
 """
-NEXUS — single-command entry point.
+NEXUS — single entry point for local dev and Vercel production.
 
-    python app.py              (classic: FastAPI serves SPA, opens browser)
-    streamlit run app.py       (Streamlit >= 1.63 auto-detects the module-level
-                                ASGI app below and serves it with Streamlit's
-                                OWN uvicorn on the Streamlit port).
+    python app.py        local: FastAPI serves the SPA + /api on one port,
+                         builds the frontend if needed, opens the browser.
 
-Both forms serve the built frontend and the /api routes from the SAME process
-on a SINGLE origin: no second uvicorn, no embedded iframe, no 127.0.0.1
-redirect. The frontend is built automatically if needed and the database is
-auto-initialized on startup. No second terminal, no `uvicorn ...`, no
-`npm run dev` required.
+    Vercel               imports this module and uses the module-level
+                         `app` (FastAPI) as the ASGI entrypoint. No server
+                         is started, no port is bound, no process is kept
+                         alive: Vercel invokes `app` per request. The
+                         frontend is built by vercel.json's buildCommand
+                         and served statically; /api/* falls through to
+                         this ASGI app.
+
+Both paths serve the built frontend and the /api routes from a SINGLE
+origin — same URLs locally and in production.
 """
 from __future__ import annotations
 
@@ -34,6 +37,8 @@ DEMO_HINT = (
     "Demo login: demo@nexus.io / demo1234  (manager@nexus.io / manager123, "
     "analyst@nexus.io / analyst123, viewer@nexus.io / viewer123)"
 )
+
+RUNNING_ON_VERCEL = bool(os.environ.get("VERCEL"))
 
 
 def log(msg: str) -> None:
@@ -86,6 +91,11 @@ def ensure_frontend_build(force: bool = False) -> Path:
     index = DIST_DIR / "index.html"
     if index.is_file() and not force:
         return DIST_DIR
+    if RUNNING_ON_VERCEL:
+        # Vercel runs `npm run build` via vercel.json's buildCommand before
+        # packaging — never shell out to npm from inside a serverless import.
+        log("frontend/dist missing on Vercel — check the buildCommand output.")
+        return DIST_DIR if index.is_file() else FRONTEND_DIR
     if not FRONTEND_DIR.is_dir():
         sys.exit(f"[NEXUS] frontend directory not found: {FRONTEND_DIR}")
 
@@ -121,40 +131,35 @@ def mount_frontend(fastapi_app, static_dir: Path) -> None:
     return
 
 
-def _running_under_streamlit_script() -> bool:
-    """True when this file is being executed as a classic Streamlit script.
-
-    Streamlit >= 1.63 never reaches this point: it detects the module-level
-    ASGI app below and serves it directly. This guard only matters for ancient
-    Streamlit builds, where executing app.py as a script would otherwise start
-    a SECOND web server — which we refuse to do.
-    """
-    try:
-        from streamlit.runtime.scriptrunner import get_script_run_ctx
-        from streamlit.runtime import exists as st_runtime_exists
-        return st_runtime_exists() and get_script_run_ctx() is not None
-    except Exception:
-        return False
-
-
 # ---------------------------------------------------------------------------
-# Module-level ASGI app.
+# Module-level ASGI app — THE production entrypoint.
 #
-# `streamlit run app.py` (Streamlit >= 1.63) AST-parses this file, finds the
-# `app = FastAPI(...)` assignment below, and serves that single app with
-# Streamlit's OWN uvicorn on the Streamlit port (8501 by default). The browser
-# reaches the NEXUS SPA and its /api routes on ONE origin — no second process,
-# no iframe, no container-localhost port that a deployed browser could never
-# reach.
+# Local:   `python app.py` runs main() below (uvicorn, browser open).
+# Vercel:  imports this module and calls `app` per request (no main(), no
+#          port, no background process). FastAPI framework detection reads
+#          `fastapi` from requirements.txt and picks up this `app`.
 # ---------------------------------------------------------------------------
 
 def _prepare_environment() -> None:
     load_env_file(BACKEND_DIR / ".env")
 
-    # Zero-config default: local SQLite demo database unless explicitly configured.
-    os.environ.setdefault(
-        "DATABASE_URL", "sqlite:///" + (BACKEND_DIR / "nexus.db").as_posix()
-    )
+    if RUNNING_ON_VERCEL:
+        # Serverless filesystem is read-only (except /tmp): never point the
+        # default DB at backend/nexus.db here. /tmp SQLite is an ephemeral
+        # zero-config demo fallback — set DATABASE_URL (PostgreSQL) in the
+        # Vercel project settings for a persistent production database.
+        if not os.environ.get("DATABASE_URL"):
+            os.environ["DATABASE_URL"] = "sqlite:////tmp/nexus.db"
+            log(
+                "DATABASE_URL is not set — using ephemeral /tmp SQLite. "
+                "Set DATABASE_URL (PostgreSQL) in Vercel Environment Variables "
+                "for persistent data."
+            )
+    else:
+        # Zero-config default: local SQLite demo database unless explicitly configured.
+        os.environ.setdefault(
+            "DATABASE_URL", "sqlite:///" + (BACKEND_DIR / "nexus.db").as_posix()
+        )
     os.environ.setdefault("DEMO_MODE", "true")
 
 
@@ -168,16 +173,39 @@ def _load_backend_module():
 _prepare_environment()
 ensure_python_deps()
 # Best-effort auto-build so a freshly-cloned repo (no `dist/`) still serves a
-# production bundle. In classic mode main() re-runs this when `--rebuild` is set.
+# production bundle. On Vercel the build already ran (buildCommand) — see the
+# guard inside ensure_frontend_build.
 ensure_frontend_build(force=False)
 
 _backend = _load_backend_module()
+
+# ---------------------------------------------------------------------------
+# Serverless-safe database initialization.
+#
+# Vercel invokes the ASGI app per request and may not deliver lifespan
+# startup events, so init_db() runs once per container through BOTH the
+# lifespan (when supported) and a request middleware (guaranteed). init_db()
+# is idempotent: create_all + guarded migrations + seed-only-when-empty.
+# ---------------------------------------------------------------------------
+_init_lock = threading.Lock()
+_db_ready = False
+
+
+def _init_db_once() -> None:
+    global _db_ready
+    if _db_ready:
+        return
+    with _init_lock:
+        if _db_ready:
+            return
+        _backend.init_db()
+        _db_ready = True
 
 
 @asynccontextmanager
 async def _nexus_lifespan(_app: FastAPI):
     try:
-        _backend.init_db()
+        _init_db_once()
     except Exception:
         import logging
         logging.getLogger("nexus").exception(
@@ -192,11 +220,29 @@ app = FastAPI(
     description="Enterprise AI Intelligence & Operations Platform",
     lifespan=_nexus_lifespan,
 )
+
+
+@app.middleware("http")
+async def _ensure_db_initialized(request, call_next):
+    # Guarantees schema + demo seed exist even if the runtime never sends a
+    # lifespan event. On failure, _db_ready stays False so the next request
+    # retries instead of serving 500s forever.
+    if not _db_ready:
+        try:
+            _init_db_once()
+        except Exception:
+            import logging
+            logging.getLogger("nexus").exception(
+                "Deferred database initialization failed — check DATABASE_URL"
+            )
+    return await call_next(request)
+
+
 app.mount("/", _backend.app)
 
 
 # ---------------------------------------------------------------------------
-# Classic entry: `python app.py`
+# Classic local entry: `python app.py`
 # ---------------------------------------------------------------------------
 
 def run_server(fastapi_app, host: str, port: int, url: str, open_browser: bool) -> None:
@@ -244,13 +290,6 @@ class _BrowserOpenServer:
 
 
 def main() -> None:
-    if _running_under_streamlit_script():
-        sys.exit(
-            "[NEXUS] This build of Streamlit predates ASGI detection and would start "
-            "a second web server. Please upgrade Streamlit:\n"
-            "    pip install -U \"streamlit>=1.63\""
-        )
-
     force = "--rebuild" in sys.argv
     ensure_frontend_build(force=force)
 

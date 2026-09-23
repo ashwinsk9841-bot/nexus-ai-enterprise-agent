@@ -11,6 +11,9 @@ venv/
 .env
 .env.local
 
+# Vercel
+.vercel/
+
 # Frontend / Node
 node_modules/
 .vite/

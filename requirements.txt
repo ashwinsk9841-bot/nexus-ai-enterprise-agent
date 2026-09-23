@@ -1,5 +1,15 @@
-# Root requirements for Streamlit Cloud / `streamlit run app.py`.
-# Streamlit Cloud installs dependencies from requirements.txt next to the main
-# script, so this file must exist at the repo root. Keep it a thin include of
-# the backend manifest — do not duplicate/pin versions here.
--r backend/requirements.txt
+# Root requirements for Vercel (Python runtime, `pip install -r requirements.txt`).
+# Vercel detects the FastAPI framework by finding `fastapi` in THIS file, then
+# loads the module-level `app` from app.py as the ASGI entrypoint.
+# Keep in sync with backend/requirements.txt (used by docker/ and local dev).
+fastapi>=0.111,<1.0
+uvicorn[standard]>=0.30,<1.0
+sqlalchemy>=2.0,<2.1
+pydantic>=2.7,<3.0
+pydantic-settings>=2.3,<3.0
+email-validator>=2.0
+PyJWT>=2.8,<3.0
+python-multipart>=0.0.9
+openai>=1.30,<2.0
+pypdf>=4.2
+psycopg2-binary>=2.9.9

@@ -9,4 +9,4 @@ python-multipart>=0.0.9
 openai>=1.30,<2.0
 pypdf>=4.2
 psycopg2-binary>=2.9.9
-streamlit>=1.36,<2.0
+# Keep in sync with root requirements.txt (Vercel runtime installs from there).

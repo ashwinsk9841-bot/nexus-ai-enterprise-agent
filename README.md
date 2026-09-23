@@ -110,12 +110,25 @@ npm run dev        # http://localhost:5173
 
 This is **optional** — for everyday use, run `python app.py`.
 
+### Previewing the Vercel behavior locally
+
+```bash
+npx vercel dev
+```
+
+Runs the same install/build pipeline as production (pip + npm build) and
+serves the site through Vercel's local runtime — useful to confirm the
+`app.py` entrypoint before pushing.
+
 ---
 
 ## Architecture
 
 ```
-app.py               Single entry point: build check → FastAPI → serve → open browser
+vercel.json          Vercel config: pip install → npm build → static dist + app.py function
+requirements.txt     Root manifest for the Vercel Python runtime (fastapi visible)
+app.py               Single entry point: local `python app.py` (uvicorn + browser)
+                     and Vercel ASGI entry (module-level `app`, per-request, no port)
 frontend/            Custom HTML/CSS/JS SPA (AI command-center UI)
   index.html         App shell (login + layout + page containers)
   src/js/            UI, API client, page renderers, particle background
@@ -139,7 +152,7 @@ See `backend/.env.example`. Key ones:
 
 | Variable          | Purpose                                   | Default               |
 | ----------------- | ----------------------------------------- | --------------------- |
-| `DATABASE_URL`    | SQLAlchemy URL (SQLite/PostgreSQL)        | SQLite `backend/nexus.db` |
+| `DATABASE_URL`    | SQLAlchemy URL (SQLite/PostgreSQL)        | SQLite `backend/nexus.db` locally; ephemeral `/tmp` SQLite on Vercel until you set a Postgres URL |
 | `SECRET_KEY`      | JWT signing secret (change in production) | dev-only value        |
 | `OPENAI_API_KEY`  | Enables real LLM + embeddings             | empty → demo mode     |
 | `DEMO_MODE`       | Seed/allow synthetic data                 | `true`                |
@@ -168,15 +181,72 @@ Secrets are never exposed to frontend JavaScript.
 backend\.venv\Scripts\python -m pytest -q
 ```
 
-## Deployment Notes
+## Deployment — Vercel (production)
+
+NEXUS deploys to Vercel as a FastAPI project with a static frontend:
+
+- **Entry point:** `app.py` (module-level `app = FastAPI(...)`) — Vercel detects
+  `fastapi` in `requirements.txt` and invokes this ASGI app per request.
+  No port is bound, no server process is kept alive, nothing is Streamlit.
+- **Frontend:** `vercel.json` builds `frontend/dist` (`npm run build`) and
+  serves it statically; `/api/*` falls through to the FastAPI function.
+  The function also bundles `frontend/dist` (`includeFiles`) so deep links
+  (`/analytics`, `/admin`, ...) get the SPA shell even on a filesystem miss.
+- **Database:** set `DATABASE_URL` to a PostgreSQL URL (Neon, Vercel Postgres,
+  …). Without it, Vercel falls back to **ephemeral `/tmp` SQLite** (fine for a
+  demo — every cold start re-seeds the demo users, data does not persist).
+  The local default (`backend/nexus.db`) is never used on Vercel.
+
+### Deploy steps
+
+```bash
+npm i -g vercel        # or: npx vercel
+vercel login
+vercel link            # choose/creates the project — name it "nexus-enterprise-agent"
+vercel --prod
+```
+
+Or connect the GitHub repo in the Vercel dashboard (framework is
+auto-detected; no preset override needed).
+
+To get `https://nexus-enterprise-agent.vercel.app`, the Vercel **project
+name must be** `nexus-enterprise-agent`.
+
+### Environment variables (Vercel project → Settings → Environment Variables)
+
+| Variable               | Required | Purpose                                        |
+| ---------------------- | -------- | ---------------------------------------------- |
+| `DATABASE_URL`         | **yes** (prod) | PostgreSQL URL, e.g. `postgres://…?sslmode=require` |
+| `SECRET_KEY`           | **yes**  | JWT signing secret — set a long random value   |
+| `OPENAI_API_KEY`       | optional | Enables real LLM + embeddings (else demo mode) |
+| `DEMO_MODE`            | optional | Seed/allow synthetic demo data (default `true`) |
+| `NEXUS_ADMIN_EMAIL`    | optional | Bootstrap an admin account on first run        |
+| `NEXUS_ADMIN_PASSWORD_HASH` | optional | PBKDF2 hash for the bootstrapped admin    |
+| `ALLOW_SIGNUP`         | optional | Public self-registration (default on)          |
+| `CORS_ORIGINS`         | optional | Extra allowed origins (same-origin by default) |
+| `ENVIRONMENT` / `DEBUG` / `NEXUS_AI_PROVIDER` | optional | Runtime toggles               |
+
+There is **no email provider**: OTP / email verification / forgot-password are
+intentionally not part of the system (registration is password-based).
+
+### Serverless behavior (what differs from `python app.py`)
+
+- **DB init runs per request, once per container** — a middleware (plus the
+  lifespan, where supported) calls the idempotent `init_db()` so tables and
+  demo users exist even though Vercel may never send a lifespan event.
+- **In-memory rate limiter and the AI vector store are per-instance** — they
+  reset on cold starts (not a shared store; swap for Redis if you need
+  global limits).
+- **Long AI operations** are capped by `maxDuration: "max"` in `vercel.json`;
+  very long runs can still hit plan limits — re-run from the UI if so.
+- **No npm/uvicorn at import time on Vercel** — guarded by the `VERCEL` env
+  flag; the build happens in `buildCommand`.
+
+## Deployment — Docker (optional, self-hosted)
 
 - Set a real `SECRET_KEY`, `OPENAI_API_KEY`, and Postgres credentials.
 - `python app.py` is production-ready as-is (build + serve + API in one process).
 - Run under a process manager (systemd / Docker) — see `docker/`.
-- **Streamlit Cloud:** deploy the FastAPI backend separately and serve the
-  `frontend/dist` build as static assets; the custom frontend remains the
-  primary UI. A Streamlit adapter (if ever added) is separate and never replaces
-  the main architecture.
 
 ## Roadmap / In Progress
 

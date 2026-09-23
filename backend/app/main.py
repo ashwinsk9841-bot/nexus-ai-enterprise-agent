@@ -237,12 +237,20 @@ app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
 
 @app.get("/api/health", tags=["Health"])
 def health():
+    """Real health check: verifies a live database round-trip, not a canned reply."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:
+        db_ok = False
     return {
-        "status": "ok",
+        "status": "ok" if db_ok else "degraded",
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "demo_mode": settings.DEMO_MODE,
         "ai_configured": bool(settings.OPENAI_API_KEY),
+        "database": "HEALTHY" if db_ok else "UNREACHABLE",
     }
 
 
